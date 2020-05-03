@@ -87,3 +87,9 @@ Service to track and calculate the times spent on various projects
   * other static data for invoices
   * invoice items that are not time based
   * see pdfwriter.go file for pdf creation
+
+## Commands ##
+
+* migrate: `migrate -path migrations -database sqlite3://database.db up`
+* start: `go run github.com/akoeb/timetracker -db database.db`
+* test `curl -H "Content-Type: application/json" localhost:8080/api/...`
