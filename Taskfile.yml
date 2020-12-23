@@ -1,0 +1,15 @@
+# https://taskfile.dev
+# 
+# * test `curl -H "Content-Type: application/json" localhost:8080/api/...`
+
+version: '2'
+
+
+tasks:
+  migrate:
+    cmds:
+      - migrate -path migrations -database sqlite3://database.db up
+    silent: true
+  start:
+    cmds:
+      - go run github.com/akoeb/timetracker -db database.db

@@ -100,7 +100,7 @@ func (db *Database) getProjectList() (*ProjectCollection, error) {
 	}
 	return &result, nil
 }
-func (db *Database) upsertProject(project *Project) error {
+func (db *Database) upsertProject(project *Project) (*Project, error) {
 
 	doInsert := true
 	if project.ID > 0 {
@@ -117,7 +117,7 @@ func (db *Database) upsertProject(project *Project) error {
 	stmt, err := db.conn.Prepare(query)
 	// Exit if we get an error
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// Make sure to cleanup after the program exits
 	defer stmt.Close()
@@ -131,7 +131,7 @@ func (db *Database) upsertProject(project *Project) error {
 	}
 	// Exit if we get an error
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// in insert, read the autoincremented id back into struct
@@ -139,10 +139,10 @@ func (db *Database) upsertProject(project *Project) error {
 		id64, err := result.LastInsertId()
 		project.ID = int(id64)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return nil
+	return project, nil
 }
 
 func (db *Database) getProjectByID(id int) (Project, error) {
@@ -170,7 +170,7 @@ func (db *Database) getProjectByID(id int) (Project, error) {
 func (db *Database) deleteProjectByID(id int) (int, error) {
 
 	// first all items in the category:
-	sql := db.models["project"].deleteQuery + "WHERE id = ?"
+	sql := db.models["project"].deleteQuery + " WHERE id = ?"
 
 	// Create a prepared SQL statement
 	stmt, err := db.conn.Prepare(sql)
@@ -209,39 +209,39 @@ func (db *Database) getProjectEventList(projectid int) (*EventCollection, error)
 	// make sure to cleanup when the program exits
 	defer rows.Close()
 
-	if rows.Next() {
-		item := &Event{}
-		err = rows.Scan(item.ID, item.ProjectID, item.Code, item.Timestamp, item.Note)
+	for rows.Next() {
+		item := Event{}
+		err = rows.Scan(&item.ID, &item.ProjectID, &item.Code, &item.Timestamp, &item.Note)
 
 		// Exit if we get an error
 		if err != nil {
 			return result, err
 		}
-		result.Events = append(result.Events, *item)
+		result.Events = append(result.Events, item)
 	}
 	return result, nil
 }
 func (db *Database) getProjectEventByID(projectID int, eventID int) (*Event, error) {
-	result := &Event{}
+	result := Event{}
 	sql := db.models["event"].selectQuery + " WHERE id = ? AND project_id = ?"
 	rows, err := db.conn.Query(sql, eventID, projectID)
 	// Exit if the SQL doesn't work for some reason
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 	// make sure to cleanup when the program exits
 	defer rows.Close()
 
 	if rows.Next() {
-		err = rows.Scan(result.ID, result.ProjectID, result.Code, result.Timestamp, result.Note)
+		err = rows.Scan(&result.ID, &result.ProjectID, &result.Code, &result.Timestamp, &result.Note)
 		// Exit if we get an error
 		if err != nil {
-			return result, err
+			return nil, err
 		}
 	}
-	return result, nil
+	return &result, nil
 }
-func (db *Database) upsertEvent(event *Event) error {
+func (db *Database) upsertEvent(event *Event) (*Event, error) {
 
 	doInsert := true
 	if event.ID > 0 {
@@ -258,7 +258,7 @@ func (db *Database) upsertEvent(event *Event) error {
 	stmt, err := db.conn.Prepare(query)
 	// Exit if we get an error
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// Make sure to cleanup after the program exits
 	defer stmt.Close()
@@ -272,7 +272,7 @@ func (db *Database) upsertEvent(event *Event) error {
 	}
 	// Exit if we get an error
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// in insert, read the autoincremented id back into struct
@@ -280,15 +280,15 @@ func (db *Database) upsertEvent(event *Event) error {
 		id64, err := result.LastInsertId()
 		event.ID = int(id64)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return nil
+	return event, nil
 }
 func (db *Database) deleteEventByProjectAndID(projectID int, eventID int) (int, error) {
 
 	// first all items in the category:
-	sql := db.models["events"].deleteQuery + " WHERE project_id = ? AND id = ?"
+	sql := db.models["event"].deleteQuery + " WHERE project_id = ? AND id = ?"
 
 	// Create a prepared SQL statement
 	stmt, err := db.conn.Prepare(sql)
@@ -313,4 +313,38 @@ func (db *Database) deleteEventByProjectAndID(projectID int, eventID int) (int, 
 	}
 
 	return int(numDeleted), nil
+}
+
+// reset the database completely:
+func (db *Database) resetDB() error {
+
+	sqlList := [4]string{
+		db.models["event"].deleteQuery,
+		db.models["project"].deleteQuery,
+		fmt.Sprintf("DELETE FROM sqlite_sequence WHERE name='%s'", db.models["event"].table),
+		fmt.Sprintf("DELETE FROM sqlite_sequence WHERE name='%s'", db.models["project"].table),
+	}
+
+	for _, sql := range sqlList {
+
+		// Create a prepared SQL statement
+		stmt, err := db.conn.Prepare(sql)
+		// Exit if we get an error
+		if err != nil {
+			return err
+		}
+		// Make sure to cleanup after the program exits
+		defer stmt.Close()
+
+		// Execute
+		_, err = stmt.Exec()
+
+		// Exit if we get an error
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
 }

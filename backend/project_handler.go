@@ -47,21 +47,22 @@ func createProject(db *Database) echo.HandlerFunc {
 		}
 
 		// write to db
-		err = db.upsertProject(project)
+		p, err := db.upsertProject(project)
 		if err != nil {
 			ctx.Logger().Infof("createProject: Database Error %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError, "Could not write project")
 		}
 
 		// return the modified item with new id:
-		return ctx.JSON(http.StatusOK, project)
+		return ctx.JSON(http.StatusCreated, p)
 	}
 }
 
 // apis.GET("/projects/:projectid", showProjectDetails(db))
 func showProjectDetails(db *Database) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		id, err := strconv.Atoi(ctx.Param("projectid"))
+		p := ctx.Param("projectid")
+		id, err := strconv.Atoi(p)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Invalid Path Parameter")
 		}
@@ -88,7 +89,7 @@ func updateProject(db *Database) echo.HandlerFunc {
 
 		// bind body into struct
 		project := &Project{}
-		err = ctx.Bind(&project)
+		err = ctx.Bind(project)
 		if err != nil {
 			ctx.Logger().Infof("updateProject: Bind Error with request %v: %v", ctx.Request().Body, err)
 			return echo.NewHTTPError(http.StatusBadRequest, "Wrong Input")
@@ -99,7 +100,7 @@ func updateProject(db *Database) echo.HandlerFunc {
 		}
 
 		// do database operation
-		err = db.upsertProject(project)
+		p, err := db.upsertProject(project)
 		if err != nil {
 			ctx.Logger().Infof("updateProject: Database Error %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError, "Could not change project")
@@ -107,7 +108,7 @@ func updateProject(db *Database) echo.HandlerFunc {
 		}
 
 		// inform the client
-		return ctx.JSON(http.StatusOK, project)
+		return ctx.JSON(http.StatusOK, p)
 	}
 }
 
@@ -141,7 +142,7 @@ func showProjectEventHistory(db *Database) echo.HandlerFunc {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Invalid Path Parameter")
 		}
-		events, err := db.getProjectByID(projectid)
+		events, err := db.getProjectEventList(projectid)
 		if err != nil {
 			ctx.Logger().Infof("showProjectEventHistory: Database Error %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError, "Could not get event list")
@@ -182,14 +183,14 @@ func createProjectEvent(db *Database) echo.HandlerFunc {
 		event.ProjectID = projectid
 
 		// write to db
-		err = db.upsertEvent(event)
+		e, err := db.upsertEvent(event)
 		if err != nil {
 			ctx.Logger().Infof("createEvent: Database Error %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError, "Could not write event")
 		}
 
 		// return the modified item with new id:
-		return ctx.JSON(http.StatusOK, event)
+		return ctx.JSON(http.StatusCreated, e)
 	}
 }
 
@@ -227,7 +228,7 @@ func updateProjectEvent(db *Database) echo.HandlerFunc {
 		}
 		// bind body into struct
 		event := &Event{}
-		err = ctx.Bind(&event)
+		err = ctx.Bind(event)
 		if err != nil {
 			ctx.Logger().Infof("updateProjectEvent: Bind Error with request %v: %v", ctx.Request().Body, err)
 			return echo.NewHTTPError(http.StatusBadRequest, "Wrong Input")
@@ -246,14 +247,14 @@ func updateProjectEvent(db *Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusNotFound, "Event not Found")
 		}
 
-		err = db.upsertEvent(event)
+		ev, err := db.upsertEvent(event)
 		if err != nil {
 			ctx.Logger().Infof("updateEvent: Database Error %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError, "Could not change event")
 		}
 
 		// inform the client
-		return ctx.JSON(http.StatusOK, event)
+		return ctx.JSON(http.StatusOK, ev)
 	}
 }
 
