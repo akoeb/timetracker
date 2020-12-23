@@ -2,14 +2,18 @@
 # 
 # * test `curl -H "Content-Type: application/json" localhost:8080/api/...`
 
-version: '2'
-
+version: '3'
+env:
+  db_file: database.db
+  
 
 tasks:
   migrate:
+    desc: "Migrate the database file"
     cmds:
-      - migrate -path migrations -database sqlite3://database.db up
+      - migrate -path migrations -database sqlite3://$db_file up
     silent: true
-  start:
+  run:
+    desc: "Run the backend"
     cmds:
-      - go run github.com/akoeb/timetracker -db database.db
+      - go run . -db database.db

@@ -96,8 +96,8 @@ func main() {
 		}))
 	}
 
-	// routes for static files TODO: 	correct FS Path
-	e.Static("/", "/app/public/")
+	// routes for static files
+	e.Static("/", "static")
 
 	// apis have their own middlewares: group them
 	apis := e.Group("/api")
