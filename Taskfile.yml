@@ -14,6 +14,25 @@ tasks:
       - migrate -path migrations -database sqlite3://$db_file up
     silent: true
   run:
-    desc: "Run the backend"
+    desc: "Run the app"
     cmds:
+      - task: build-frontend
       - go run . -db database.db
+  
+  build-frontend:
+    desc: Build vue frontend
+    dir: frontend
+    cmds:
+      - npm run build
+
+  lint-frontend:
+    desc: Lint vue frontend
+    dir: frontend
+    cmds:
+      - npm run lint
+  
+  serve-frontend:
+    desc: Serve vue frontend
+    dir: frontend
+    cmds:
+      - npm run serve
