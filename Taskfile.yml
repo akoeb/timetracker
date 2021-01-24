@@ -16,7 +16,7 @@ tasks:
   run:
     desc: "Run the app"
     cmds:
-      - task: build-frontend
+      #- task: build-frontend
       - go run . -db database.db
   
   build-frontend:

@@ -41,7 +41,7 @@ func toJSON(obj interface{}) (string, error) {
 	switch v := obj.(type) {
 	case nil:
 		err = fmt.Errorf("can not convert nil object to JSON")
-	case Project, ProjectCollection, Event, EventCollection:
+	case Project, ProjectCollection, Event, ProjectEventsCollection:
 		b, err = json.Marshal(v)
 		retVal = string(b)
 	default:
@@ -73,8 +73,8 @@ func fromJSON(jsonStr string, model interface{}) (interface{}, error) {
 			return nil, err
 		}
 		return v, nil
-	case EventCollection:
-		var v EventCollection
+	case ProjectEventsCollection:
+		var v ProjectEventsCollection
 		if err := json.Unmarshal([]byte(jsonStr), &v); err != nil {
 			return nil, err
 		}

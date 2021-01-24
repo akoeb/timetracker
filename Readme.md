@@ -88,3 +88,6 @@ Service to track and calculate the times spent on various projects
   * invoice items that are not time based
   * see pdfwriter.go file for pdf creation
 
+## TODO ##
+
+* javascript validation in create project form

@@ -197,8 +197,8 @@ func (db *Database) deleteProjectByID(id int) (int, error) {
 	return int(numDeleted), nil
 }
 
-func (db *Database) getProjectEventList(projectid int) (*EventCollection, error) {
-	result := &EventCollection{}
+func (db *Database) getProjectEventList(projectid int) ([]Event, error) {
+	result := []Event{}
 	sql := db.models["event"].selectQuery + " WHERE project_id = ?"
 
 	rows, err := db.conn.Query(sql, projectid)
@@ -217,7 +217,7 @@ func (db *Database) getProjectEventList(projectid int) (*EventCollection, error)
 		if err != nil {
 			return result, err
 		}
-		result.Events = append(result.Events, item)
+		result = append(result, item)
 	}
 	return result, nil
 }
@@ -313,6 +313,54 @@ func (db *Database) deleteEventByProjectAndID(projectID int, eventID int) (int, 
 	}
 
 	return int(numDeleted), nil
+}
+
+// get last event in project
+func (db *Database) getLastEventByProject(projectID int) (*Event, error) {
+	result := &Event{}
+	sql := db.models["event"].selectQuery + " WHERE project_id = ? ORDER BY timestamp desc"
+
+	rows, err := db.conn.Query(sql, projectID)
+
+	// Exit if the SQL doesn't work for some reason
+	if err != nil {
+		return result, err
+	}
+	// make sure to cleanup when the program exits
+	defer rows.Close()
+
+	// only read the last item (first when sorting desc)
+	if rows.Next() {
+		err = rows.Scan(&result.ID, &result.ProjectID, &result.Code, &result.Timestamp, &result.Note)
+
+		// Exit if we get an error
+		if err != nil {
+			return result, err
+		}
+	}
+	return result, nil
+}
+
+// get next possible event type
+func (db *Database) nextEventType(projectID int) (string, error) {
+	event, err := db.getLastEventByProject(projectID)
+	if err != nil {
+		return "", err
+	}
+
+	//no events yet:
+	if event.ID == 0 {
+		return "CHECK_IN", nil
+	}
+
+	if event.Code == "CHECK_IN" {
+		return "CHECK_OUT", nil
+	} else if event.Code == "CHECK_OUT" {
+		return "CHECK_IN", nil
+	}
+
+	// should not happen:
+	return "", fmt.Errorf("unexpected Event Code found in Database: %v (id: %v)", event.Code, event.ID)
 }
 
 // reset the database completely:

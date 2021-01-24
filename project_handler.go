@@ -17,9 +17,10 @@ func showProjectList(db *Database) echo.HandlerFunc {
 			ctx.Logger().Infof("showAllProjects: Database Error %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError, "Could not read projects")
 		}
-		if len(projects.Projects) < 1 {
-			return echo.NewHTTPError(http.StatusNotFound, "Project not Found")
-		}
+		// does it make sense to return 404 on empty project list?
+		//if len(projects.Projects) < 1 {
+		//	return echo.NewHTTPError(http.StatusNotFound, "Project not Found")
+		//}
 		return ctx.JSON(http.StatusOK, projects)
 	}
 }
@@ -137,17 +138,23 @@ func deleteProject(db *Database) echo.HandlerFunc {
 // apis.GET("/projects/:projectid/events",showProjectEventHistory(db))
 func showProjectEventHistory(db *Database) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
+		var retVal ProjectEventsCollection
 		// get parameter
 		projectid, err := strconv.Atoi(ctx.Param("projectid"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Invalid Path Parameter")
 		}
-		events, err := db.getProjectEventList(projectid)
+		retVal.Project, err = db.getProjectByID(projectid)
 		if err != nil {
-			ctx.Logger().Infof("showProjectEventHistory: Database Error %v", err)
+			ctx.Logger().Infof("showProjectEventHistory: Database Error in projectQuery %v", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "Could not get project")
+		}
+		retVal.Events, err = db.getProjectEventList(projectid)
+		if err != nil {
+			ctx.Logger().Infof("showProjectEventHistory: Database Error in eventsQuery %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError, "Could not get event list")
 		}
-		return ctx.JSON(http.StatusOK, events)
+		return ctx.JSON(http.StatusOK, retVal)
 	}
 }
 
@@ -172,6 +179,17 @@ func createProjectEvent(db *Database) echo.HandlerFunc {
 		// field validation
 		if ok, errors := event.IsValid(); !ok {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Wrong Input: %v", errors))
+		}
+
+		// verify that the correct event type is submitted:
+		possibleEventCode, err := db.nextEventType(projectid)
+		if err != nil {
+			ctx.Logger().Infof("createEvent: error while finding possible event type %v", err)
+			return echo.NewHTTPError(http.StatusBadRequest, "Wrong Input")
+		}
+		if possibleEventCode != event.Code {
+			ctx.Logger().Infof("createEvent: invalid event code %v, possible: %v", event.Code, possibleEventCode)
+			return echo.NewHTTPError(http.StatusBadRequest, "Wrong Input: invalid event code")
 		}
 
 		// creates can not have an id

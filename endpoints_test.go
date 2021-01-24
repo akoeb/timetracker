@@ -255,10 +255,10 @@ func TestShowProjectEventHistory(t *testing.T) {
 		// HTTP Status Code
 		assert.Equal(t, http.StatusOK, rec.Code)
 
-		var rp EventCollection
-		res, err := fromJSON(rec.Body.String(), EventCollection{})
+		var rp ProjectEventsCollection
+		res, err := fromJSON(rec.Body.String(), ProjectEventsCollection{})
 		assert.NoError(t, err)
-		re, ok := res.(EventCollection)
+		re, ok := res.(ProjectEventsCollection)
 		assert.True(t, ok)
 
 		// validate number of projects:
@@ -435,10 +435,10 @@ func TestDeleteEvent(t *testing.T) {
 		// HTTP Status Code
 		assert.Equal(t, http.StatusOK, rec.Code)
 
-		var rp EventCollection
-		res, err := fromJSON(rec.Body.String(), EventCollection{})
+		var rp ProjectEventsCollection
+		res, err := fromJSON(rec.Body.String(), ProjectEventsCollection{})
 		assert.NoError(t, err)
-		re, ok := res.(EventCollection)
+		re, ok := res.(ProjectEventsCollection)
 		assert.True(t, ok)
 
 		// validate number of projects:

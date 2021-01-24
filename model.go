@@ -28,7 +28,13 @@ type Event struct {
 }
 
 // EventCollection collection if events
-type EventCollection struct {
+//type EventCollection struct {
+//Events []Event `json:"events"`
+//}
+
+// ProjectEventsCollection combines a project and the collection of its events
+type ProjectEventsCollection struct {
+	Project
 	Events []Event `json:"events"`
 }
 

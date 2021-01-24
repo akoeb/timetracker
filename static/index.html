@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>frontend</title>
+        <link href="/css/style.css" rel="stylesheet">
+        <script src="/js/app.js"></script>
+        <!-- link href="/js/app.js" rel="preload" as="script" -->
+    </head>
+    <body>
+        <noscript>
+            <strong>We're sorry but frontend doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+        </noscript>
+        <h1>Projects</h1>
+        <template id="project-nav-tpl">
+            <header>
+                <h2 id="project-name-header"></h2>
+          </header>
+          <nav>
+            <div class="tabnav" id="project-detail-tab">Detail</div>
+            <div class="tabnav" id="project-history-tab">History</div>
+          </nav>
+        </template>
+        <template id="project-detail-content-tpl">
+            <h1 id="project-name"></h1>
+            <div id="project-status"></div>
+            <button id="toggle-project-status">Toggle</button>
+        </template>
+        <template id="project-history-content-tpl">
+            <h1>Project History</h1>
+            <div id="project-events-list"></div>
+            <form id="add-event-form">
+                <input name="newEventNote">
+                <input name="newEventTimestamp">
+                <input type="radio" name="code" value="CHECK_IN">&nbsp;<input type="radio" name="code" value="CHECK_OUT">
+                <input type="submit" id="add-event-form-submit">
+            </form>
+        </template>
+        <template id="project-events-list-tpl">
+            <div class="events-incorrect-warning"></div>
+            <ul>
+                <div id="event-item"></div>
+            </ul>
+        </template>
+        <template id="event-item-tpl">
+          <li>
+              <input class="event-action-val" disabled=true>
+              at
+              <input class="event-timestamp-val" disabled="true">
+              <button class="event-edit-btn" onclick="toggleEditEvent(this)">edit</button>
+              <button class="event-del-btn" onclick="deleteEvent(this)">delete</button>
+          </li>  
+        </template>
+        <template id="project-list-content-tpl">
+            <h1>Project List</h1>
+            <div id="project-list"></div>
+            <form id="add-project-form">
+                <input name="newProjectName">
+                <input name="newProjectClientName">
+                <input type="submit" id="add-project-form-submit">
+            </form>
+        </template>
+        <template id="project-list-tpl">
+            <ul>
+                <div id="project-item"></div>
+            </ul>
+        </template>
+        <template id="project-item-tpl">
+            <li>
+                <input class="project-name-val" disabled="true">
+                <input class="project-client-name-val" disabled="true">
+                <div class="project-status-val"></div>
+                <button class="project-show-btn" onclick="showProject(this)">detail</button>
+                <button class="project-edit-btn" onclick="toggleEditProject(this)">edit</button>
+                <button class="project-del-btn" onclick="deleteProject(this)">delete</button>
+            </li>
+        </template>
+        <template id="status-select-tpl">
+            <select id="status-select" class="status-select">
+                <option value="">--Please choose initial status--</option>
+                <option value="OPEN">Open - The project is open</option>
+                <option value="CLOSED">Closed - no work is being done here</option>
+                <option value="ACTIVE">Active - project is actively being worked on</option>
+            </select>
+        </template>
+        <div id="app"></div>
+    </body>
+</html>
